@@ -21,7 +21,7 @@ function App() {
             formData.append('file', file)
 
             try {
-                const response = await fetch('http://localhost:8000/api/analyze', {
+                const response = await fetch('/api/analyze', {
                     method: 'POST',
                     body: formData,
                 })
@@ -42,7 +42,7 @@ function App() {
     const handleGenerateCombinedReport = async () => {
         setGeneratingCombinedReport(true)
         try {
-            const response = await fetch('http://localhost:8000/api/generate-combined-report', {
+            const response = await fetch('/api/generate-combined-report', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ results })
