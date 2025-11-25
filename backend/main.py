@@ -1,9 +1,11 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 import pdfplumber
 import re
 import os
+from pathlib import Path
 from datetime import datetime
 from anthropic import Anthropic
 from dotenv import load_dotenv
@@ -17,16 +19,19 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
 
-app = FastAPI(title="BillGuard AI API")
+app = FastAPI(title="BillGuard AI")
 
-# CORS for local development
+# CORS – allow localhost during development; for deployed single-origin
+# setups (Railway, etc.) this can be set to ["*"] for simplicity.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Static files will be mounted at the end of the file after all API routes
 
 class AnomalyDetector:
     def detect(self, data):
@@ -165,8 +170,9 @@ def get_ai_summary(data, anomalies):
         return "Significant increase in consumption. Verify meter reading and check for equipment issues."
     return "Multiple issues detected. Manual review recommended."
 
-@app.get("/")
-async def root():
+
+@app.get("/health")
+async def health():
     return {"message": "BillGuard AI API", "status": "running"}
 
 @app.post("/api/analyze")
@@ -417,6 +423,18 @@ Format the report professionally with clear headings, bullet points, and actiona
             status_code=500,
             content={"error": str(e)}
         )
+
+# --- Static frontend (Vite build) ---
+# Mount static files AFTER all API routes so API routes take priority
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+FRONTEND_DIST = PROJECT_ROOT / "frontend" / "dist"
+
+if FRONTEND_DIST.exists():
+    app.mount(
+        "/",
+        StaticFiles(directory=str(FRONTEND_DIST), html=True),
+        name="frontend",
+    )
 
 if __name__ == "__main__":
     import uvicorn
