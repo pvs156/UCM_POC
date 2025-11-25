@@ -24,6 +24,8 @@ COPY --from=frontend-builder /src/frontend/dist ./frontend/dist
 
 # copy installed Python packages (includes uvicorn)
 COPY --from=backend-builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+# copy uvicorn and other entrypoint scripts
+COPY --from=backend-builder /usr/local/bin /usr/local/bin
 
 # expose the port Railway/Azure will assign
 ENV PORT=8000
