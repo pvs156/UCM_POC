@@ -1,74 +1,45 @@
-# ⚡ Utility Bill Anomaly Detector POC
+# Utility Bill Anomaly Detector (proof of concept)
 
-A visually stunning, AI-powered proof-of-concept application for detecting anomalies in utility bills. This tool demonstrates a modern approach to document processing, combining OCR, rule-based logic, and Generative AI to provide actionable insights.
+A Streamlit demo that checks utility bill PDFs for usage spikes, rate mismatches, and arithmetic errors. It can use Claude to summarize detected issues in plain language.
 
-## 🌟 Key Features
+## Architecture
 
--   **Visual Workflow**: Interactive "How It Works" section demonstrating the data pipeline.
--   **Realistic Bill Generation**: Creates industry-standard PDF utility bills for testing.
--   **Multi-Layered Detection**: Identifies usage spikes, calculation errors, and rate mismatches.
--   **AI-Powered Insights**: Uses Claude (Anthropic) to generate human-readable summaries of anomalies.
--   **Production-Ready Design**: Professional UI with custom CSS, interactive charts, and a scaling strategy.
+```text
+PDF upload → pdfplumber text extraction → field parsing → rule-based anomaly checks
+                                                     └→ optional Claude summary → Streamlit results
+```
 
-## 🛠️ Tech Stack
+`app.py` handles uploads, extraction, rules, and the UI. `generate_bills.py` uses ReportLab to create sample PDF bills. If `ANTHROPIC_API_KEY` is absent or the API call fails, the app uses a rule-based summary. The detector works without an API key.
 
--   **Frontend**: Streamlit (with custom CSS & components)
--   **PDF Processing**: `pdfplumber` (Extraction), `weasyprint` (Generation)
--   **AI Engine**: Anthropic Claude API
--   **Visualization**: Plotly, Streamlit Extras
+This app extracts text from PDFs; it does **not** perform OCR on scanned images.
 
-## 🚀 Quick Start
+## Stack
 
-### Prerequisites
+Python, Streamlit, pdfplumber, ReportLab, Plotly, and the Anthropic Python SDK.
 
--   Python 3.9+
--   **WeasyPrint Dependencies**:
-    -   **Windows**: You may need to install GTK3. Follow the [WeasyPrint Windows installation guide](https://doc.courtbouillon.org/weasyprint/stable/first_steps.html#windows).
-    -   **Mac/Linux**: Install via Homebrew (`brew install weasyprint`) or your package manager.
+## Run locally
 
-### Installation
+Requires Python 3.9 or later.
 
-1.  **Clone the repository**
-    ```bash
-    git clone <repository-url>
-    cd UCM_POC
-    ```
+```bash
+git clone https://github.com/pvs156/UCM_POC.git
+cd UCM_POC
+python -m venv .venv
+# Activate .venv for your shell.
+pip install -r requirements.txt
+cp .env.example .env
+python generate_bills.py
+streamlit run app.py
+```
 
-2.  **Install dependencies**
-    ```bash
-    pip install -r requirements.txt
-    ```
+Set `ANTHROPIC_API_KEY` in `.env` to enable Claude summaries. You can also set `ANTHROPIC_MODEL`; the default is `claude-sonnet-4-6`. Do not commit `.env`. Open the local URL printed by Streamlit and upload one of the generated bills or a text-based bill PDF.
 
-3.  **Set up Environment Variables**
-    -   Copy `.env.example` to `.env`
-    -   Add your Anthropic API Key:
-        ```
-        ANTHROPIC_API_KEY=sk-ant-...
-        ```
+## Results and evaluation
 
-### Running the Demo
+The repository includes generated sample bills for a manual walkthrough. It does not publish a labeled test set, precision/recall, or a measured accuracy claim. The code reports anomalies from fixed rules; Claude explains those results and does not determine whether the bill is correct.
 
-1.  **Generate Sample Bills**
-    Run the generation script to create 4 realistic PDF bills in the `generated_bills/` directory.
-    ```bash
-    python generate_bills.py
-    ```
+## Limits
 
-2.  **Launch the App**
-    ```bash
-    streamlit run app.py
-    ```
-
-## 🎨 Design Philosophy
-
-This POC is designed to emulate a high-end **Enterprise SaaS** platform (e.g., Stripe, Vercel).
--   **Data-First Aesthetic**: Clean "Slate" color palette, high-contrast typography (Inter), and subtle shadows.
--   **Trust & Clarity**: No gimmicks. Professional "Audit Dashboard" layout with clear pipeline visualization.
--   **Actionable Intelligence**: Anomalies are presented as "Auditor Notes" with clear financial impact.
-
-## 📈 Scaling Strategy
-
-Check the "Scaling to Production" section in the app for a detailed breakdown of:
--   **Architecture**: Microservices approach.
--   **Data Pipeline**: Async processing with queues.
--   **ML Enhancements**: Moving from rules to predictive models.
+- Parsing expects the bill formats used in this proof of concept; other layouts may need new extraction rules.
+- Scanned PDFs need an OCR step before this app can analyze them.
+- Rules and AI summaries are aids for review, not a substitute for checking the original bill.
