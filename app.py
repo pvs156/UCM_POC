@@ -299,13 +299,13 @@ def get_ai_summary(data, anomalies):
         try:
             client = Anthropic(api_key=api_key)
             message = client.messages.create(
-                model="claude-3-sonnet-20240229",
+                model=os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-6"),
                 max_tokens=100,
                 messages=[{"role": "user", "content": f"Summarize these billing issues in 2 sentences:\n{anomaly_text}"}]
             )
             return message.content[0].text
-        except:
-            pass
+        except Exception:
+            st.warning('Claude summary unavailable; showing a rule-based summary.')
     
     if "Rate Error" in anomaly_text:
         return "Tier 1 rate incorrectly applied. Contact billing department for rate correction and refund."
